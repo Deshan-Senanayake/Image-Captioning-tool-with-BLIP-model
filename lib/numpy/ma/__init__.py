@@ -1,79 +1,53 @@
 """
-``numpy.linalg``
-================
+=============
+Masked Arrays
+=============
 
-The NumPy linear algebra functions rely on BLAS and LAPACK to provide efficient
-low level implementations of standard linear algebra algorithms. Those
-libraries may be provided by NumPy itself using C versions of a subset of their
-reference implementations but, when possible, highly optimized libraries that
-take advantage of specialized processor functionality are preferred. Examples
-of such libraries are OpenBLAS, MKL (TM), and ATLAS. Because those libraries
-are multithreaded and processor dependent, environmental variables and external
-packages such as threadpoolctl may be needed to control the number of threads
-or specify the processor architecture.
+Arrays sometimes contain invalid or missing data.  When doing operations
+on such arrays, we wish to suppress invalid values, which is the purpose masked
+arrays fulfill (an example of typical use is given below).
 
-- OpenBLAS: https://www.openblas.net/
-- threadpoolctl: https://github.com/joblib/threadpoolctl
+For example, examine the following array:
 
-Please note that the most-used linear algebra functions in NumPy are present in
-the main ``numpy`` namespace rather than in ``numpy.linalg``.  There are:
-``dot``, ``vdot``, ``inner``, ``outer``, ``matmul``, ``tensordot``, ``einsum``,
-``einsum_path`` and ``kron``.
+>>> x = np.array([2, 1, 3, np.nan, 5, 2, 3, np.nan])
 
-Functions present in numpy.linalg are listed below.
+When we try to calculate the mean of the data, the result is undetermined:
 
+>>> np.mean(x)
+nan
 
-Matrix and vector products
---------------------------
+The mean is calculated using roughly ``np.sum(x)/len(x)``, but since
+any number added to ``NaN`` [1]_ produces ``NaN``, this doesn't work.  Enter
+masked arrays:
 
-   multi_dot
-   matrix_power
+>>> m = np.ma.masked_array(x, np.isnan(x))
+>>> m
+masked_array(data = [2.0 1.0 3.0 -- 5.0 2.0 3.0 --],
+      mask = [False False False  True False False False  True],
+      fill_value=1e+20)
 
-Decompositions
---------------
+Here, we construct a masked array that suppress all ``NaN`` values.  We
+may now proceed to calculate the mean of the other values:
 
-   cholesky
-   qr
-   svd
+>>> np.mean(m)
+2.6666666666666665
 
-Matrix eigenvalues
-------------------
+.. [1] Not-a-Number, a floating point value that is the result of an
+       invalid operation.
 
-   eig
-   eigh
-   eigvals
-   eigvalsh
-
-Norms and other numbers
------------------------
-
-   norm
-   cond
-   det
-   matrix_rank
-   slogdet
-
-Solving equations and inverting matrices
-----------------------------------------
-
-   solve
-   tensorsolve
-   lstsq
-   inv
-   pinv
-   tensorinv
-
-Exceptions
-----------
-
-   LinAlgError
+.. moduleauthor:: Pierre Gerard-Marchant
+.. moduleauthor:: Jarrod Millman
 
 """
-# To get sub-modules
-from . import linalg
-from .linalg import *
+from . import core
+from .core import *
 
-__all__ = linalg.__all__.copy()
+from . import extras
+from .extras import *
+
+__all__ = ['core', 'extras']
+__all__ += core.__all__
+__all__ += extras.__all__
 
 from numpy._pytesttester import PytestTester
 test = PytestTester(__name__)
